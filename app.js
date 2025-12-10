@@ -4,8 +4,8 @@ let pickValues = {};
 // Load values + picks on startup
 async function loadData() {
   try {
-    const valuesRes = await fetch("data/values.json");
-    const picksRes = await fetch("data/pick_values.json");
+    const valuesRes = await fetch("Data/values.json");
+    const picksRes = await fetch("Data/pick_values.json");
 
     playerValues = await valuesRes.json();
     pickValues = await picksRes.json();
@@ -95,3 +95,4 @@ document.addEventListener("DOMContentLoaded", () => {
     resultDiv.classList.remove("hidden");
   });
 });
+
