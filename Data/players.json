@@ -1,0 +1,6 @@
+[
+  { "id": "jefferson_justin", "name": "Justin Jefferson", "pos": "WR", "team": "MIN" },
+  { "id": "hall_breece", "name": "Breece Hall", "pos": "RB", "team": "NYJ" },
+  { "id": "lamb_ceedee", "name": "CeeDee Lamb", "pos": "WR", "team": "DAL" },
+  { "id": "wilson_garrett", "name": "Garrett Wilson", "pos": "WR", "team": "NYJ" }
+]
