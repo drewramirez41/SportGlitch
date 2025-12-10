@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SportGlitch – Trade Analyzer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="sg-header">
+    <div class="sg-logo">Sport<span>Glitch</span></div>
+    <div class="sg-tagline">Find the glitch in the market.</div>
+  </header>
+
+  <main class="sg-main">
+    <section class="sg-panel">
+      <h1>Trade Analyzer (v0)</h1>
+      <p class="sg-subtext">
+        Type player names and picks for each side. This prototype uses a simple
+        value model from static JSON files.
+      </p>
+
+      <div class="sg-trade-grid">
+        <div class="sg-side">
+          <h2>Side A</h2>
+          <label>Players (comma-separated)</label>
+          <input id="sideAPlayers" type="text"
+                 placeholder="e.g. Justin Jefferson, Breece Hall" />
+
+          <label>Picks (comma-separated)</label>
+          <input id="sideAPicks" type="text"
+                 placeholder="e.g. 2026 1st, 2027 2nd" />
+        </div>
+
+        <div class="sg-side">
+          <h2>Side B</h2>
+          <label>Players (comma-separated)</label>
+          <input id="sideBPlayers" type="text"
+                 placeholder="e.g. CeeDee Lamb, 2026 2nd" />
+
+          <label>Picks (comma-separated)</label>
+          <input id="sideBPicks" type="text"
+                 placeholder="e.g. 2026 1st" />
+        </div>
+      </div>
+
+      <button id="analyzeBtn">Analyze Trade</button>
+
+      <div id="result" class="sg-result hidden">
+        <h2>Result</h2>
+        <p id="resultSummary"></p>
+        <pre id="resultDetails"></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sg-footer">
+    SportGlitch prototype – local only · Values are fake for now
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
