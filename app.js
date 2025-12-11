@@ -4,71 +4,58 @@ let pickValues = {};
 // Load players + values + picks on startup
 async function loadData() {
   try {
-    // Load full player list from Sleeper snapshot
+    // 1) Load all players from the Data/players.json file (from GitHub on the live site)
     const playersRes = await fetch("Data/players.json");
     if (!playersRes.ok) {
       throw new Error("Failed to load players.json: " + playersRes.status);
     }
-    const players = await playersRes.json(); // array of { id, name, pos, team }
+    const players = await playersRes.json();
 
-    // Load optional manual overrides (can be empty or small)
-    let overrides = {};
-    try {
-      const overridesRes = await fetch("Data/values.json");
-      if (overridesRes.ok) {
-        overrides = await overridesRes.json(); // object { "Player Name": number }
-      }
-    } catch (e) {
-      console.warn("No overrides values.json found or invalid:", e);
-    }
-
-    // Load pick values if available
+    // 2) Try to load pick values (optional)
     try {
       const picksRes = await fetch("Data/pick_values.json");
       if (picksRes.ok) {
-        pickValues = await picksRes.json(); // e.g. { "2026 1st": 500, ... }
+        pickValues = await picksRes.json();
+      } else {
+        pickValues = {};
       }
     } catch (e) {
       console.warn("No pick_values.json found or invalid:", e);
       pickValues = {};
     }
 
-    // Baseline values by position (rough placeholders to get functionality flowing)
+    // 3) Build per-player values: position base + tiny tweak from ID so each player is unique
     const baseByPos = {
-      QB: 700,
-      RB: 650,
-      WR: 650,
-      TE: 550,
-      K: 250,
+      QB: 900,
+      RB: 800,
+      WR: 780,
+      TE: 700,
+      K: 300,
       DEF: 300,
-      DL: 275,
-      LB: 275,
-      DB: 250,
-      CB: 250,
-      S: 250,
-      OT: 150,
-      OG: 150,
-      C: 150
     };
-
-    const defaultValue = 100; // weird positions, long snappers, etc.
+    const defaultBase = 400;
 
     playerValues = {};
 
-    // Build baseline map from players.json
     players.forEach((p) => {
       if (!p || !p.name) return;
+
       const pos = p.pos || "";
-      const base = baseByPos[pos] ?? defaultValue;
-      playerValues[p.name] = base;
+      const base = baseByPos[pos] ?? defaultBase;
+
+      const idNum = parseInt(p.player_id || p.id || "0", 10) || 0;
+      const noise = (idNum % 41) - 20;
+
+      const value = base + noise;
+
+      const key = typeof normalizeName === "function"
+        ? normalizeName(p.name)
+        : p.name.trim();
+
+      playerValues[key] = value;
     });
 
-    // Apply manual overrides on top
-    Object.entries(overrides).forEach(([name, val]) => {
-      playerValues[name] = val;
-    });
-
-    console.log("Loaded player values for", Object.keys(playerValues).length, "players");
+    console.log("Loaded values for", Object.keys(playerValues).length, "players");
   } catch (err) {
     console.error("Error loading data files:", err);
   }
@@ -150,3 +137,4 @@ document.addEventListener("DOMContentLoaded", () => {
     resultDiv.classList.remove("hidden");
   });
 });
+
