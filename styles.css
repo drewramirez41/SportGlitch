@@ -153,3 +153,39 @@ button:hover {
   color: #6b7280;
   text-align: center;
 }
+
+/* Suggestions dropdown */
+.sg-suggest{
+  position: relative;
+  margin-top: 6px;
+}
+.sg-suggest .sg-suggest-box{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: rgba(7,11,18,.98);
+  border: 1px solid rgba(60,140,255,.22);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  z-index: 50;
+}
+.sg-suggest .sg-suggest-item{
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #cfe3ff;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.sg-suggest .sg-suggest-item:last-child{
+  border-bottom: none;
+}
+.sg-suggest .sg-suggest-item:hover{
+  background: rgba(90,160,255,.12);
+}
+.sg-suggest .sg-suggest-muted{
+  opacity: .7;
+  font-size: 12px;
+  margin-left: 8px;
+}
