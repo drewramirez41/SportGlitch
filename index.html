@@ -1,61 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SportGlitch – Trade Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SportGlitch — Trade Analyzer</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <header class="sg-header">
-    <div class="sg-logo">Sport<span>Glitch</span></div>
-    <div class="sg-tagline">Find the glitch in the market.</div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-title">SPORTGLITCH</div>
+      <div class="brand-subtitle">Find the glitch in the market.</div>
+    </div>
   </header>
 
-  <main class="sg-main">
-    <section class="sg-panel">
-      <h1>Trade Analyzer (v0)</h1>
-      <p class="sg-subtext">
-        Type player names and picks for each side. This prototype uses a simple
-        value model from static JSON files.
-      </p>
+  <main class="wrap">
+    <section class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">Trade Analyzer (v0)</h1>
+        <p class="panel-subtitle">
+          Type player names and picks for each side. Uses static JSON files for now.
+        </p>
+      </div>
 
-      <div class="sg-trade-grid">
-        <div class="sg-side">
-          <h2>Side A</h2>
-          <label>Players (comma-separated)</label>
-          <input id="sideAPlayers" type="text"
-                 placeholder="e.g. Justin Jefferson, Breece Hall" />
+      <div class="grid2">
+        <!-- SIDE A -->
+        <div class="col">
+          <h2 class="col-title">Side A</h2>
 
-          <label>Picks (comma-separated)</label>
-          <input id="sideAPicks" type="text"
-                 placeholder="e.g. 2026 1st, 2027 2nd" />
+          <label class="lbl" for="sideAPlayers">Players (comma-separated)</label>
+          <input
+            id="sideAPlayers"
+            class="in"
+            type="text"
+            placeholder="e.g. Justin Jefferson, Puka Nacua"
+            autocomplete="off"
+          />
+          <div class="hint">Tip: separate players with commas.</div>
+
+          <label class="lbl" for="sideAPicks">Picks (comma-separated)</label>
+          <input
+            id="sideAPicks"
+            class="in"
+            type="text"
+            placeholder="e.g. 2026 1st, 2027 2nd"
+            autocomplete="off"
+          />
         </div>
 
-        <div class="sg-side">
-          <h2>Side B</h2>
-          <label>Players (comma-separated)</label>
-          <input id="sideBPlayers" type="text"
-                 placeholder="e.g. CeeDee Lamb, 2026 2nd" />
+        <!-- SIDE B -->
+        <div class="col">
+          <h2 class="col-title">Side B</h2>
 
-          <label>Picks (comma-separated)</label>
-          <input id="sideBPicks" type="text"
-                 placeholder="e.g. 2026 1st" />
+          <label class="lbl" for="sideBPlayers">Players (comma-separated)</label>
+          <input
+            id="sideBPlayers"
+            class="in"
+            type="text"
+            placeholder="e.g. CeeDee Lamb"
+            autocomplete="off"
+          />
+          <div class="hint">Tip: separate players with commas.</div>
+
+          <label class="lbl" for="sideBPicks">Picks (comma-separated)</label>
+          <input
+            id="sideBPicks"
+            class="in"
+            type="text"
+            placeholder="e.g. 2026 1st"
+            autocomplete="off"
+          />
         </div>
       </div>
 
-      <button id="analyzeBtn">Analyze Trade</button>
+      <div class="actions">
+        <button id="analyzeBtn" class="btn">Analyze Trade</button>
+        <span id="loadStatus" class="status">Loading data…</span>
+      </div>
 
-      <div id="result" class="sg-result hidden">
-        <h2>Result</h2>
-        <p id="resultSummary"></p>
-        <pre id="resultDetails"></pre>
+      <div class="result">
+        <div class="result-title">Result</div>
+        <pre id="resultBox" class="result-box">Waiting…</pre>
       </div>
     </section>
-  </main>
 
-  <footer class="sg-footer">
-    SportGlitch prototype – local only · Values are fake for now
-  </footer>
+    <footer class="footer">
+      SportGlitch prototype — local JSON values. Values are placeholders until we wire real pricing.
+    </footer>
+  </main>
 
   <script src="app.js"></script>
 </body>
