@@ -189,3 +189,98 @@ button:hover {
   font-size: 12px;
   margin-left: 8px;
 }
+
+/* === SportGlitch: dark + glitch form fields (CSS-only) === */
+
+/* make sure inputs never go white */
+.trade-card input,
+.trade-card textarea,
+input,
+textarea {
+  background: #041224 !important;
+  color: #d9f3ff !important;
+  border: 1px solid rgba(0, 255, 160, 0.22) !important;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 160, 0.10),
+    0 0 18px rgba(0, 255, 160, 0.08);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.trade-card input::placeholder,
+.trade-card textarea::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: rgba(190, 230, 255, 0.55);
+}
+
+/* focus glow */
+.trade-card input:focus,
+.trade-card textarea:focus,
+input:focus,
+textarea:focus {
+  border-color: rgba(0, 255, 160, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 160, 0.25),
+    0 0 26px rgba(0, 255, 160, 0.22),
+    0 0 50px rgba(0, 180, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+/* CHROME autofill override (this is the “white box” killer) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #d9f3ff !important;
+  transition: background-color 99999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px #041224 inset !important;
+  border: 1px solid rgba(0, 255, 160, 0.35) !important;
+}
+
+/* glitchy card overlay */
+.trade-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.trade-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.06) 0px,
+      rgba(255,255,255,0.06) 1px,
+      rgba(0,0,0,0) 3px,
+      rgba(0,0,0,0) 7px
+    );
+  mix-blend-mode: overlay;
+}
+
+.trade-card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+    radial-gradient(900px 220px at 30% 0%, rgba(0,255,160,0.18), transparent 60%),
+    radial-gradient(700px 200px at 80% 20%, rgba(0,180,255,0.16), transparent 55%);
+  filter: blur(6px);
+}
+
+/* subtle “glitch” text vibe for headings */
+.trade-card h2,
+.trade-card h3 {
+  text-shadow:
+    1px 0 rgba(0, 255, 160, 0.30),
+    -1px 0 rgba(0, 180, 255, 0.20);
+}
