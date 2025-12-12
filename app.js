@@ -1,140 +1,262 @@
-let playerValues = {};
-let pickValues = {};
+let players = [];
+let playerByName = new Map();   // normalizedName -> player
+let overrides = {};             // optional: { "Player Name": 1234 }
+let pickValues = {};            // { "2026 1st": 500, ... }
 
-// Load players + values + picks on startup
-async function loadData() {
-  try {
-    // 1) Load all players from the Data/players.json file (from GitHub on the live site)
-    const playersRes = await fetch("Data/players.json");
-    if (!playersRes.ok) {
-      throw new Error("Failed to load players.json: " + playersRes.status);
-    }
-    const players = await playersRes.json();
+const DATA_DIR = "Data"; // IMPORTANT: match your repo folder name exactly (case-sensitive)
 
-    // 2) Try to load pick values (optional)
-    try {
-      const picksRes = await fetch("Data/pick_values.json");
-      if (picksRes.ok) {
-        pickValues = await picksRes.json();
-      } else {
-        pickValues = {};
-      }
-    } catch (e) {
-      console.warn("No pick_values.json found or invalid:", e);
-      pickValues = {};
-    }
+const el = (id) => document.getElementById(id);
 
-    // 3) Build per-player values: position base + tiny tweak from ID so each player is unique
-    const baseByPos = {
-      QB: 900,
-      RB: 800,
-      WR: 780,
-      TE: 700,
-      K: 300,
-      DEF: 300,
-    };
-    const defaultBase = 400;
-
-    playerValues = {};
-
-    players.forEach((p) => {
-      if (!p || !p.name) return;
-
-      const pos = p.pos || "";
-      const base = baseByPos[pos] ?? defaultBase;
-
-      const idNum = parseInt(p.player_id || p.id || "0", 10) || 0;
-      const noise = (idNum % 41) - 20;
-
-      const value = base + noise;
-
-      const key = typeof normalizeName === "function"
-        ? normalizeName(p.name)
-        : p.name.trim();
-
-      playerValues[key] = value;
-    });
-
-    console.log("Loaded values for", Object.keys(playerValues).length, "players");
-  } catch (err) {
-    console.error("Error loading data files:", err);
-  }
+function normName(s) {
+  return (s || "").trim().toLowerCase();
 }
 
-function parseList(value) {
-  return value
+function splitCommaList(s) {
+  return (s || "")
     .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+    .map(x => x.trim())
+    .filter(Boolean);
 }
 
-function sumSide(players, picks) {
+// deterministic tiny hash so every player gets a unique “prototype” value
+function hashStr(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0);
+}
+
+function prototypeValueFor(player) {
+  // base by position (feel free to tweak)
+  const base = {
+    QB: 900,
+    RB: 780,
+    WR: 760,
+    TE: 640,
+    K: 120,
+    DEF: 200,
+    DL: 260,
+    LB: 240,
+    DB: 220,
+  };
+
+  const pos = player?.pos || "WR";
+  const b = base[pos] ?? 300;
+
+  // add unique “variation” so players aren’t all the same by position
+  const h = hashStr(`${player?.name || ""}|${player?.team || ""}|${player?.id || ""}`);
+  const wiggle = (h % 220); // 0..219
+
+  return b + wiggle;
+}
+
+async function safeFetchJson(path) {
+  const res = await fetch(path, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} for ${path}`);
+  return res.json();
+}
+
+async function loadData() {
+  el("loading").style.display = "block";
+  el("loading").textContent = "Loading data...";
+
+  // 1) players
+  players = await safeFetchJson(`${DATA_DIR}/players.json`);
+
+  // players.json might be either array OR object (Sleeper raw format is often an object)
+  if (!Array.isArray(players)) {
+    // convert object -> array
+    players = Object.values(players);
+  }
+
+  // build lookup map by name
+  playerByName.clear();
+  for (const p of players) {
+    if (!p || !p.name) continue;
+    const key = normName(p.name);
+    if (!playerByName.has(key)) playerByName.set(key, p);
+  }
+
+  // 2) overrides (optional)
+  try {
+    const maybe = await safeFetchJson(`${DATA_DIR}/values.json`);
+    // we only treat it as overrides if it’s a plain object map
+    if (maybe && !Array.isArray(maybe) && typeof maybe === "object") {
+      overrides = maybe;
+    } else {
+      overrides = {};
+    }
+  } catch {
+    overrides = {};
+  }
+
+  // 3) pick values (optional)
+  try {
+    pickValues = await safeFetchJson(`${DATA_DIR}/pick_values.json`);
+  } catch {
+    pickValues = {};
+  }
+
+  el("loading").textContent = `Loaded ${players.length} players.`;
+  setTimeout(() => (el("loading").style.display = "none"), 700);
+
+  // wire typeahead once data is loaded
+  setupTypeahead("playersA", "suggestA");
+  setupTypeahead("playersB", "suggestB");
+}
+
+function getPlayerValueByName(name) {
+  const exact = (name || "").trim();
+
+  // if overrides are present, they win
+  if (overrides && Object.prototype.hasOwnProperty.call(overrides, exact)) {
+    const v = Number(overrides[exact]);
+    if (Number.isFinite(v)) return v;
+  }
+
+  // fallback: find player and generate a deterministic prototype value
+  const p = playerByName.get(normName(exact));
+  if (!p) return 0;
+  return prototypeValueFor(p);
+}
+
+function getPickValue(pickText) {
+  const key = (pickText || "").trim();
+  const v = pickValues?.[key];
+  return Number.isFinite(Number(v)) ? Number(v) : 0;
+}
+
+function calcSide(playersText, picksText) {
+  const playerNames = splitCommaList(playersText);
+  const picks = splitCommaList(picksText);
+
   let total = 0;
-  const details = [];
+  let details = [];
 
-  players.forEach((name) => {
-    const key = name.trim();
-    const v = playerValues[key] ?? 0;
-    details.push(`Player: ${key} -> ${v}`);
+  for (const n of playerNames) {
+    const v = getPlayerValueByName(n);
     total += v;
-  });
+    details.push(`Player: ${n} -> ${v}`);
+  }
 
-  picks.forEach((p) => {
-    const key = p.trim();
-    const v = pickValues[key] ?? 0;
-    details.push(`Pick: ${key} -> ${v}`);
+  for (const p of picks) {
+    const v = getPickValue(p);
     total += v;
-  });
+    details.push(`Pick: ${p} -> ${v}`);
+  }
 
   return { total, details };
 }
 
 function describeTrade(aTotal, bTotal) {
-  if (aTotal === 0 && bTotal === 0) {
-    return "No recognized players or picks yet. Add some names and picks.";
-  }
+  if (aTotal === 0 && bTotal === 0) return "No recognized players or picks yet. Add some names and picks.";
 
-  const diff = Math.abs(aTotal - bTotal);
-  const bigger = Math.max(aTotal, bTotal);
-  const pct = bigger === 0 ? 0 : Math.round((diff / bigger) * 100);
+  const diff = aTotal - bTotal;
+  const base = Math.max(aTotal, bTotal, 1);
+  const pct = Math.round((Math.abs(diff) / base) * 100);
 
-  if (pct <= 5) {
-    return `Pretty fair trade. Difference: ${pct}%.`;
-  }
-  if (aTotal > bTotal) {
-    return `Side A wins this trade by about ${pct}%.`;
-  }
+  if (pct <= 5) return `Pretty fair trade. Difference: ${pct}%.`;
+  if (diff > 0) return `Side A wins this trade by about ${pct}%.`;
   return `Side B wins this trade by about ${pct}%.`;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadData();
+function analyze() {
+  const a = calcSide(el("playersA").value, el("picksA").value);
+  const b = calcSide(el("playersB").value, el("picksB").value);
 
-  const btn = document.getElementById("analyzeBtn");
-  const resultDiv = document.getElementById("result");
-  const summaryP = document.getElementById("resultSummary");
-  const detailsPre = document.getElementById("resultDetails");
+  const lines = [];
+  lines.push(describeTrade(a.total, b.total));
+  lines.push("");
+  lines.push(`Side A total: ${a.total}`);
+  lines.push(...a.details);
+  lines.push("");
+  lines.push(`Side B total: ${b.total}`);
+  lines.push(...b.details);
 
-  btn.addEventListener("click", () => {
-    const sideAPlayers = parseList(document.getElementById("sideAPlayers").value);
-    const sideAPicks = parseList(document.getElementById("sideAPicks").value);
+  el("resultText").textContent = lines.join("\n");
+}
 
-    const sideBPlayers = parseList(document.getElementById("sideBPlayers").value);
-    const sideBPicks = parseList(document.getElementById("sideBPicks").value);
+/* -------- Typeahead (dropdown suggestions) -------- */
 
-    const a = sumSide(sideAPlayers, sideAPicks);
-    const b = sumSide(sideBPlayers, sideBPicks);
+function getLastTokenInfo(inputValue) {
+  // we suggest for the last comma-separated token
+  const raw = inputValue || "";
+  const parts = raw.split(",");
+  const last = parts[parts.length - 1];
+  const prefix = parts.slice(0, -1).join(","); // without last
+  return {
+    prefix: prefix.trim(),
+    last: (last || "").trim()
+  };
+}
 
-    const summary = describeTrade(a.total, b.total);
-    const detailsText =
-      `Side A total: ${a.total}\n` +
-      a.details.join("\n") +
-      `\n\nSide B total: ${b.total}\n` +
-      b.details.join("\n");
+function setLastTokenValue(inputEl, fullValuePrefix, chosenName) {
+  if (fullValuePrefix) {
+    inputEl.value = `${fullValuePrefix}, ${chosenName}`;
+  } else {
+    inputEl.value = chosenName;
+  }
+}
 
-    summaryP.textContent = summary;
-    detailsPre.textContent = detailsText;
-    resultDiv.classList.remove("hidden");
+function setupTypeahead(inputId, suggestId) {
+  const inputEl = el(inputId);
+  const suggestEl = el(suggestId);
+
+  const allNames = Array.from(playerByName.values()).map(p => p.name);
+
+  function hide() {
+    suggestEl.innerHTML = "";
+  }
+
+  function render(items, prefix) {
+    if (!items.length) return hide();
+
+    const box = document.createElement("div");
+    box.className = "sg-suggest-box";
+
+    items.forEach((name) => {
+      const p = playerByName.get(normName(name));
+      const item = document.createElement("div");
+      item.className = "sg-suggest-item";
+      const meta = p ? `(${p.pos || ""} ${p.team || ""})` : "";
+      item.innerHTML = `${name} <span class="sg-suggest-muted">${meta}</span>`;
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        setLastTokenValue(inputEl, prefix, name);
+        hide();
+      });
+      box.appendChild(item);
+    });
+
+    suggestEl.innerHTML = "";
+    suggestEl.appendChild(box);
+  }
+
+  inputEl.addEventListener("input", () => {
+    const info = getLastTokenInfo(inputEl.value);
+    const q = info.last.toLowerCase();
+    if (q.length < 2) return hide();
+
+    const matches = allNames
+      .filter(n => n.toLowerCase().includes(q))
+      .slice(0, 10);
+
+    render(matches, info.prefix);
   });
-});
 
+  inputEl.addEventListener("blur", () => {
+    // small delay so click can register
+    setTimeout(hide, 150);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadData();
+
+  el("analyzeBtn").addEventListener("click", analyze);
+
+  // run once if fields are prefilled
+  analyze();
+});
