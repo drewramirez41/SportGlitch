@@ -1,72 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SportGlitch — Trade Analyzer</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
   <header class="topbar">
-    <div class="brand">
-      <div class="brand-title">SPORTGLITCH</div>
-      <div class="brand-subtitle">Find the glitch in the market.</div>
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-title">SPORTGLITCH</div>
+        <div class="brand-sub">Find the glitch in the market.</div>
+      </div>
     </div>
   </header>
 
-  <main class="wrap">
-    <section class="panel">
-      <div class="panel-head">
-        <h1 class="panel-title">Trade Analyzer (v0)</h1>
-        <p class="panel-subtitle">
-          Type player names and picks for each side. Uses static JSON files for now.
-        </p>
-      </div>
+  <main class="page">
+    <section class="card">
+      <h1 class="card-title">Trade Analyzer (v0)</h1>
+      <p class="card-subtitle">
+        Type player names and picks for each side. This prototype uses static JSON files.
+      </p>
 
-      <div class="grid2">
-        <!-- SIDE A -->
-        <div class="col">
-          <h2 class="col-title">Side A</h2>
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">Side A</h2>
 
-          <label class="lbl" for="sideAPlayers">Players (comma-separated)</label>
+          <label class="label" for="sideAPlayers">Players (comma-separated)</label>
           <input
             id="sideAPlayers"
-            class="in"
+            class="input"
             type="text"
-            placeholder="e.g. Justin Jefferson, Puka Nacua"
+            placeholder="e.g. Justin Jefferson, Breece Hall"
             autocomplete="off"
           />
-          <div class="hint">Tip: separate players with commas.</div>
 
-          <label class="lbl" for="sideAPicks">Picks (comma-separated)</label>
+          <label class="label" for="sideAPicks">Picks (comma-separated)</label>
           <input
             id="sideAPicks"
-            class="in"
+            class="input"
             type="text"
             placeholder="e.g. 2026 1st, 2027 2nd"
             autocomplete="off"
           />
         </div>
 
-        <!-- SIDE B -->
-        <div class="col">
-          <h2 class="col-title">Side B</h2>
+        <div class="panel">
+          <h2 class="panel-title">Side B</h2>
 
-          <label class="lbl" for="sideBPlayers">Players (comma-separated)</label>
+          <label class="label" for="sideBPlayers">Players (comma-separated)</label>
           <input
             id="sideBPlayers"
-            class="in"
+            class="input"
             type="text"
-            placeholder="e.g. CeeDee Lamb"
+            placeholder="e.g. CeeDee Lamb, 2026 2nd"
             autocomplete="off"
           />
-          <div class="hint">Tip: separate players with commas.</div>
 
-          <label class="lbl" for="sideBPicks">Picks (comma-separated)</label>
+          <label class="label" for="sideBPicks">Picks (comma-separated)</label>
           <input
             id="sideBPicks"
-            class="in"
+            class="input"
             type="text"
             placeholder="e.g. 2026 1st"
             autocomplete="off"
@@ -76,12 +72,13 @@
 
       <div class="actions">
         <button id="analyzeBtn" class="btn">Analyze Trade</button>
-        <span id="loadStatus" class="status">Loading data…</span>
+        <span id="status" class="status"></span>
       </div>
 
       <div class="result">
-        <div class="result-title">Result</div>
-        <pre id="resultBox" class="result-box">Waiting…</pre>
+        <h3 class="result-title">Result</h3>
+        <p id="summary" class="result-summary">Waiting…</p>
+        <pre id="details" class="result-details"></pre>
       </div>
     </section>
 
